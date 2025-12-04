@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------------------------------------------
+   GLOBAL THEME VARIABLES (LIGHT + DARK)
+   You are building a DARK UI → dark is the PRIMARY theme.
+----------------------------------------------------------- */
+@layer base {
+  :root {
+    /* Light Mode (rarely used in your app) */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 5%;
+
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 222 84% 5%;
+
+    --primary: 250 56% 40%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --radius: 0.5rem;
+  }
+
+  /* ----------------------------------------------------------
+     DARK MODE → YOUR ACTUAL CHAT UI COLOR SYSTEM
+     Matches your existing UI perfectly
+  ----------------------------------------------------------- */
+  .dark {
+    --background: 230 15% 10%;        /* #1c1d25 */
+    --foreground: 0 0% 100%;
+
+    --card: 230 18% 13%;              /* #1f2129 */
+    --card-foreground: 0 0% 100%;
+
+    --border: 230 18% 20%;            /* matches #2a2b33 */
+    --input: 230 18% 20%;
+    --ring: 260 95% 70%;
+
+    --primary: 265 90% 60%;           /* purple button color */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 230 18% 17%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 230 18% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --radius: 0.5rem;
+  }
+}
+
+/* ----------------------------------------------------------
+   Apply theme tokens to every component
+----------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
