@@ -120,10 +120,7 @@ const Auth = () => {
     }
   };
 
-  // ---------------- DARK MODE ----------------
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
+
 
   return (
     <div
