@@ -9,51 +9,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "../../../../components/ui/button";
 import Lottie from "react-lottie";
 import { animationDefaultOptions, getColor } from "@/lib/utils";
 import { HOST, SEARCH_CONTACTS_ROUTES } from "@/utils/constants";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import { X, Plus, CheckCircle2, Circle } from "lucide-react";
+
 export const EmptyChatContainer = () => {
   const [quote, setQuote] = useState({ text: "", author: "" });
   const [isVisible, setIsVisible] = useState(false);
   const { setSelectedChatType, setSelectedChatData } = useAppStore();
 
+  // Contact search states
   const [openNewContactModel, setOpenNewContactModel] = useState(false);
   const [searchedContacts, setSearchedContacts] = useState([]);
 
-  /* --------------------------------------------------------
-     SEARCH CONTACTS API CALL
-     Runs on every input change
-  --------------------------------------------------------- */
-  const searchContacts = async (searchTerm) => {
-    try {
-      if (searchTerm.length === 0) {
-        setSearchedContacts([]);
-        return;
-      }
+  // Goals tracker states
+  const [openGoalsDialog, setOpenGoalsDialog] = useState(false);
+  const [goals, setGoals] = useState([]);
+  const [newGoal, setNewGoal] = useState("");
 
-      const response = await apiClient.post(
-        SEARCH_CONTACTS_ROUTES,
-        { searchTerm },
-        { withCredentials: true }
-      );
-
-      if (response.status === 200 && response.data.contacts) {
-        setSearchedContacts(response.data.contacts);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const selectNewContact = (contact) => {
-    setOpenNewContactModel(false);
-
-    setSelectedChatType("contact");
-    setSelectedChatData(contact);
-
-    setSearchedContacts([]);
-  };
   // Motivational quotes collection
   const motivationalQuotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
@@ -138,6 +115,65 @@ export const EmptyChatContainer = () => {
     { text: "It is never too late to be what you might have been.", author: "George Eliot" },
   ];
 
+  /* --------------------------------------------------------
+     SEARCH CONTACTS API CALL
+  --------------------------------------------------------- */
+  const searchContacts = async (searchTerm) => {
+    try {
+      if (searchTerm.length === 0) {
+        setSearchedContacts([]);
+        return;
+      }
+
+      const response = await apiClient.post(
+        SEARCH_CONTACTS_ROUTES,
+        { searchTerm },
+        { withCredentials: true }
+      );
+
+      if (response.status === 200 && response.data.contacts) {
+        setSearchedContacts(response.data.contacts);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const selectNewContact = (contact) => {
+    setOpenNewContactModel(false);
+    setSelectedChatType("contact");
+    setSelectedChatData(contact);
+    setSearchedContacts([]);
+  };
+
+  /* --------------------------------------------------------
+     GOALS FUNCTIONALITY
+  --------------------------------------------------------- */
+  const addGoal = () => {
+    if (newGoal.trim()) {
+      setGoals([...goals, { id: Date.now(), text: newGoal, completed: false }]);
+      setNewGoal("");
+    }
+  };
+
+  const toggleGoal = (id) => {
+    setGoals(goals.map(goal => 
+      goal.id === id ? { ...goal, completed: !goal.completed } : goal
+    ));
+  };
+
+  const deleteGoal = (id) => {
+    setGoals(goals.filter(goal => goal.id !== id));
+  };
+
+  /* --------------------------------------------------------
+     GET NEW RANDOM QUOTE
+  --------------------------------------------------------- */
+  const getNewRandomQuote = () => {
+    const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+    setQuote(motivationalQuotes[randomIndex]);
+  };
+
   // Get quote based on the day of the year
   useEffect(() => {
     const getDailyQuote = () => {
@@ -161,17 +197,10 @@ export const EmptyChatContainer = () => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       </div>
+
+      {/* Contact Search Dialog */}
       <Dialog open={openNewContactModel} onOpenChange={setOpenNewContactModel}>
-        <DialogContent
-          className="
-            bg-[#181920] border-none text-white 
-            w-[90%] sm:w-[420px] 
-            max-h-[85vh] 
-            p-5 flex flex-col gap-4 
-            overflow-y-auto rounded-xl
-          "
-        >
-          {/* ---------- HEADER ---------- */}
+        <DialogContent className="bg-[#181920] border-none text-white w-[90%] sm:w-[420px] max-h-[85vh] p-5 flex flex-col gap-4 overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Select a Contact</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -179,27 +208,21 @@ export const EmptyChatContainer = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {/* ---------- SEARCH INPUT ---------- */}
           <Input
             placeholder="Search Contacts"
             className="rounded-lg p-4 bg-[#2c2e3b] border-none text-white"
             onChange={(e) => searchContacts(e.target.value)}
           />
 
-          {/* ---------- SEARCH RESULTS LIST ---------- */}
           {searchedContacts.length > 0 && (
             <ScrollArea className="h-[250px] sm:h-[280px] overflow-y-auto pr-2">
               <div className="flex flex-col gap-4">
                 {searchedContacts.map((contact) => (
                   <div
                     key={contact._id}
-                    className="
-                      flex items-center gap-3 cursor-pointer 
-                      hover:bg-[#2c2e3b]/40 p-2 rounded-lg transition
-                    "
+                    className="flex items-center gap-3 cursor-pointer hover:bg-[#2c2e3b]/40 p-2 rounded-lg transition"
                     onClick={() => selectNewContact(contact)}
                   >
-                    {/* Avatar */}
                     <Avatar className="h-12 w-12 rounded-full overflow-hidden">
                       {contact.image ? (
                         <AvatarImage
@@ -207,27 +230,18 @@ export const EmptyChatContainer = () => {
                           className="object-cover w-full h-full rounded-full"
                         />
                       ) : (
-                        <div
-                          className={`
-                            uppercase h-12 w-12 flex items-center justify-center 
-                            text-lg rounded-full border ${getColor(contact.color)}
-                          `}
-                        >
-                          {contact.firstName
-                            ? contact.firstName[0]
-                            : contact.email[0]}
+                        <div className={`uppercase h-12 w-12 flex items-center justify-center text-lg rounded-full border ${getColor(contact.color)}`}>
+                          {contact.firstName ? contact.firstName[0] : contact.email[0]}
                         </div>
                       )}
                     </Avatar>
 
-                    {/* Name + Email */}
                     <div className="flex flex-col">
                       <span className="font-medium truncate max-w-[200px]">
                         {contact.firstName && contact.lastName
                           ? `${contact.firstName} ${contact.lastName}`
                           : contact.email}
                       </span>
-
                       <span className="text-xs text-gray-400 truncate max-w-[200px]">
                         {contact.email}
                       </span>
@@ -238,7 +252,6 @@ export const EmptyChatContainer = () => {
             </ScrollArea>
           )}
 
-          {/* ---------- EMPTY STATE (LOTTIE ANIMATION) ---------- */}
           {searchedContacts.length === 0 && (
             <div className="flex flex-col flex-1 justify-center items-center mt-2">
               <Lottie
@@ -247,11 +260,83 @@ export const EmptyChatContainer = () => {
                 width={100}
                 options={animationDefaultOptions}
               />
-
               <p className="text-white/80 text-center mt-4 text-lg">
                 Hi<span className="text-purple-500">!</span> Search new{" "}
                 <span className="text-purple-500">contacts.</span>
               </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Goals Tracker Dialog */}
+      <Dialog open={openGoalsDialog} onOpenChange={setOpenGoalsDialog}>
+        <DialogContent className="bg-[#181920] border-none text-white w-[90%] sm:w-[500px] max-h-[85vh] p-6 flex flex-col gap-4 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <span>🎯</span> Your Goals - Todo
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Track your progress and stay focused
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add a new goal..."
+              value={newGoal}
+              onChange={(e) => setNewGoal(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addGoal()}
+              className="flex-1 rounded-lg p-3 bg-[#2c2e3b] border-none text-white placeholder:text-gray-500"
+            />
+            <Button
+              onClick={addGoal}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
+
+          <ScrollArea className="max-h-[400px] overflow-y-auto pr-2">
+            <div className="flex flex-col gap-3">
+              {goals.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No goals yet. Start by adding one above!</p>
+                </div>
+              ) : (
+                goals.map((goal) => (
+                  <div
+                    key={goal.id}
+                    className="flex items-center gap-3 p-3 bg-[#2c2e3b]/40 rounded-lg hover:bg-[#2c2e3b]/60 transition group"
+                  >
+                    <button
+                      onClick={() => toggleGoal(goal.id)}
+                      className="text-purple-400 hover:text-purple-300"
+                    >
+                      {goal.completed ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <Circle className="w-6 h-6" />
+                      )}
+                    </button>
+                    <span className={`flex-1 ${goal.completed ? 'line-through text-gray-500' : 'text-white'}`}>
+                      {goal.text}
+                    </span>
+                    <button
+                      onClick={() => deleteGoal(goal.id)}
+                      className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+
+          {goals.length > 0 && (
+            <div className="pt-3 border-t border-gray-700 text-sm text-gray-400">
+              {goals.filter(g => g.completed).length} of {goals.length} completed
             </div>
           )}
         </DialogContent>
@@ -270,26 +355,21 @@ export const EmptyChatContainer = () => {
 
         {/* Quote card */}
         <div className="group relative">
-          {/* Glowing border effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
           
-          {/* Main card */}
           <div className="relative bg-slate-800/90 backdrop-blur-xl rounded-2xl p-10 border border-white/10 shadow-2xl">
-            {/* Quote icon */}
             <div className="absolute -top-6 left-10 w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/50 animate-bounce" style={{animationDuration: '3s'}}>
               <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
               </svg>
             </div>
 
-            {/* Quote text with typing effect feel */}
             <div className="mt-6 mb-8">
               <p className="text-white text-2xl md:text-3xl font-light leading-relaxed tracking-wide">
                 {quote.text}
               </p>
             </div>
 
-            {/* Author section with enhanced styling */}
             <div className="flex items-center gap-4 mt-8">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
               <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full border border-purple-500/20">
@@ -303,7 +383,6 @@ export const EmptyChatContainer = () => {
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
             </div>
 
-            {/* Decorative corner elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500/5 to-transparent rounded-bl-full"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-500/5 to-transparent rounded-tr-full"></div>
           </div>
@@ -320,9 +399,24 @@ export const EmptyChatContainer = () => {
         {/* Quick action hints */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: "💬", text: "Start a conversation", desc: "Begin chatting" ,action: () => setOpenNewContactModel(true)},
-            { icon: "🎯", text: "Set your goals", desc: "Track progress" ,action: () => {}},
-            { icon: "⚡", text: "Stay motivated", desc: "Keep pushing",action: () => {} }
+            { 
+              icon: "💬", 
+              text: "Start a conversation", 
+              desc: "Begin chatting",
+              action: () => setOpenNewContactModel(true)
+            },
+            { 
+              icon: "🎯", 
+              text: "Set your goals - Todo", 
+              desc: "Track progress",
+              action: () => setOpenGoalsDialog(true)
+            },
+            { 
+              icon: "⚡", 
+              text: "Stay motivated", 
+              desc: "Get new quote",
+              action: getNewRandomQuote
+            }
           ].map((item, i) => (
             <div 
               key={i} 
@@ -330,7 +424,7 @@ export const EmptyChatContainer = () => {
               style={{animationDelay: `${i * 0.2}s`}}
               onClick={item.action}
             >
-              <div className="text-3xl mb-2" >{item.icon}</div>
+              <div className="text-3xl mb-2">{item.icon}</div>
               <div className="text-white font-medium">{item.text}</div>
               <div className="text-gray-400 text-sm">{item.desc}</div>
             </div>
@@ -339,6 +433,6 @@ export const EmptyChatContainer = () => {
       </div>
     </div>
   );
-}
+};
 
 export default EmptyChatContainer;

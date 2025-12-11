@@ -124,7 +124,7 @@ const CreateChannel = () => {
               value={channelName}
             />
           </div>
-
+// Todo : want to re design this multipleselect because when i m search contacts drop down was not clear
           {/* ---------- MULTI-SELECT: CONTACTS ---------- */}
           <div>
             <MultipleSelector

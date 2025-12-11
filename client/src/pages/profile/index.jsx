@@ -92,7 +92,7 @@ const Profile = () => {
      IMAGE UPLOAD / DELETE
   -------------------------------------------------------- */
   const handleFileInputClick = () => fileInputRef.current.click();
-
+// todo : make it cloudinary image then only it shows all the time
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
     const formData = new FormData();
@@ -100,8 +100,7 @@ const Profile = () => {
 
     const response = await apiClient.post(ADD_PROFILE_IMAGE_ROUTE, formData, {
       withCredentials: true,
-    });
-
+    });    
     if (response.status === 200) {
       setUserInfo({ ...userInfo, image: response.data.image });
       toast.success("Image updated successfully");
