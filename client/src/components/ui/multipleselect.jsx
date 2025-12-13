@@ -55,6 +55,7 @@ const MultipleSelector = React.forwardRef(
       commandProps,
       inputProps,
       hideClearAllButton = false,
+      
     },
     ref
   ) => {

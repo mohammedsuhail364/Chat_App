@@ -239,9 +239,24 @@ const MessageContainer = () => {
         </div>
       )}
 
-      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1 justify-end">
-        <span>{moment(message.timestamp).format("LT")}</span>
-        <span className="text-[#8417ff]/70 text-xs">✓</span>
+      <div
+        className={`text-xs text-gray-500 mt-1 flex items-center gap-1 ${
+          message.sender !== selectedChatData._id ? "justify-end" : ""
+        }`}
+      >
+        {message.sender !== selectedChatData._id ? (
+          // User sent → timestamp then tick
+          <>
+            <span>{moment(message.timestamp).format("LT")}</span>
+            <span className="text-[#8417ff]/70 text-xs">✓</span>
+          </>
+        ) : (
+          // User received → tick then timestamp
+          <>
+            <span className="text-[#8417ff]/70 text-xs">✓</span>
+            <span>{moment(message.timestamp).format("LT")}</span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -382,7 +397,7 @@ const MessageContainer = () => {
           }
         }
       `}</style>
-      
+
       {renderMessages()}
       <div ref={scrollRef} />
 

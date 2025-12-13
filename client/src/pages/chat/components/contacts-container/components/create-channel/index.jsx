@@ -124,17 +124,20 @@ const CreateChannel = () => {
               value={channelName}
             />
           </div>
-// Todo : want to re design this multipleselect because when i m search contacts drop down was not clear
           {/* ---------- MULTI-SELECT: CONTACTS ---------- */}
-          <div>
-            <MultipleSelector
-              className="rounded-lg bg-[#2c2e3b] border-none py-2 text-white"
-              defaultOptions={allContacts}
-              placeholder="Search Contacts"
-              onChange={setSelectedContacts}
-              emptyIndicator={<p className="text-center text-gray-600">No contacts found</p>}
-            />
-          </div>
+          <MultipleSelector
+            className="rounded-lg bg-[#2c2e3b] border-none py-2 text-white"
+            defaultOptions={allContacts}
+            placeholder="Search Contacts"
+            onChange={setSelectedContacts}
+            emptyIndicator={
+              <p className="text-center text-gray-600">No contacts found</p>
+            }
+            commandProps={{
+              className:
+                "bg-white text-black border border-gray-300 rounded-md shadow-lg",
+            }}
+          />
 
           {/* ---------- BUTTON: CREATE CHANNEL ---------- */}
           <div>

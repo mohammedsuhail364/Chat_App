@@ -8,26 +8,20 @@ import contactsRoutes from './routes/contactRoutes.js';
 import setupSocket from './socket.js';
 import messagesRoutes from './routes/messageRoutes.js';
 import channelRoutes from './routes/channelRoutes.js';
+import path from 'path';
 dotenv.config();
 const app=express();
 const port=process.env.PORT || 3001;
 const databaseURL=process.env.DATABASE;
+const __dirname = path.resolve();
+const FRONTEND_URL=process.env.FRONTEND_URL;
 
-const allowedOrigins = ['http://localhost:5173', 'https://chat-us-juo5.onrender.com', 'https://mohammedsuhail364.github.io'];
 app.use(cors({
-  origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) { // Allow Postman and server-side requests
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: FRONTEND_URL,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 }));
-app.get('/',(req,res)=>{
-    res.send("<h1>Hello...</h1>")
-})
+
 app.use('/uploads/profiles',express.static('uploads/profiles'))
 app.use('/uploads/files',express.static('uploads/files'))
 app.use(cookieParser());
@@ -36,12 +30,21 @@ app.use('/api/auth',authRoutes)
 app.use('/api/contacts',contactsRoutes)
 app.use('/api/messages',messagesRoutes)
 app.use('/api/channel',channelRoutes)
+
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+  app.get("/{*any}", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+  });
+}
+
 const server=app.listen(port,()=>{
     console.log(`Server is running at http://localhost:${port}`);
 
 })
 setupSocket(server);
 mongoose
-    .connect("mongodb+srv://chatUs:Suhail364@cluster0.jl7nkbn.mongodb.net/chatApp?retryWrites=true&w=majority&appName=Cluster0")
+    .connect(databaseURL)
     .then(()=>console.log('Db connection successful'))
     .catch((err)=>console.log(err));
