@@ -1,0 +1,21 @@
+{
+  "name": "chat-us-main",
+  "version": "1.0.0",
+  "description": "Synchronous Chat App is a real-time chat application built with the MERN stack. It supports both direct messaging and group channels, making communication easy and fast. Users can create channels, send messages, and have an engaging chat experience.",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install --prefix server && npm install --include=dev --prefix client && npm run build --prefix client",
+    "start": "npm run start --prefix server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohammedsuhail364/upgrade_chat_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mohammedsuhail364/upgrade_chat_app/issues"
+  },
+  "homepage": "https://github.com/mohammedsuhail364/upgrade_chat_app#readme"
+}
