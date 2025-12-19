@@ -33,9 +33,13 @@ app.use('/api/channel',channelRoutes)
 
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
-  app.get("/{*any}", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+  const clientPath = path.join(__dirname, "../client/dist");
+
+  app.use(express.static(clientPath));
+
+  // SPA fallback (THIS is the key)
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientPath, "index.html"));
   });
 }
 
