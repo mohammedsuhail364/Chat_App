@@ -21,7 +21,6 @@ const CommandEmpty = forwardRef(({ className, ...props }, forwardedRef) => {
     <div
       ref={forwardedRef}
       className={cn("py-6 text-center text-sm", className)}
-      
       role="presentation"
       {...props}
     />
@@ -55,7 +54,6 @@ const MultipleSelector = React.forwardRef(
       commandProps,
       inputProps,
       hideClearAllButton = false,
-      
     },
     ref
   ) => {
@@ -354,7 +352,7 @@ const MultipleSelector = React.forwardRef(
         <div className="relative">
           {open && (
             <CommandList
-              className="absolute top-1 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in"
+              className="absolute top-1 z-10 w-full rounded-md border bg-[#1e1f2b] text-white shadow-lg outline-none"
               onMouseLeave={() => {
                 mouseOn.current = false;
               }}
@@ -378,7 +376,7 @@ const MultipleSelector = React.forwardRef(
                     <CommandGroup
                       key={key}
                       heading={key}
-                      className="h-full overflow-auto"
+                      className="h-full overflow-auto text-white"
                     >
                       <>
                         {dropdowns.map((option) => {

@@ -133,10 +133,6 @@ const CreateChannel = () => {
             emptyIndicator={
               <p className="text-center text-gray-600">No contacts found</p>
             }
-            commandProps={{
-              className:
-                "bg-white text-black border border-gray-300 rounded-md shadow-lg",
-            }}
           />
 
           {/* ---------- BUTTON: CREATE CHANNEL ---------- */}
