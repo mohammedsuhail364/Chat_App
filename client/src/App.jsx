@@ -8,6 +8,7 @@ import Profile from "./pages/profile";
 import apiClient from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
 import { useAppStore } from "./store";
+import { toast } from "sonner";
 
 /* --------------------------------------------------------
    PROTECTED ROUTE

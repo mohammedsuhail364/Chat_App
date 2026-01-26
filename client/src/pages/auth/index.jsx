@@ -26,9 +26,11 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [passwordStrength, setPasswordStrength] = useState(""); // 💪 Strength meter
+  const loginDisabled = loading || !email || !password;
+  const signupDisabled = loading || !email || !password || !confirmpassword;
+
   // ---------------- EMAIL FORMAT VALIDATION ----------------
-  const isValidEmail = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // ---------------- PASSWORD STRENGTH ----------------
   const checkStrength = (pass) => {
@@ -41,23 +43,31 @@ const Auth = () => {
   useEffect(() => {
     checkStrength(password);
   }, [password]);
+  useEffect(() => {
+    setEmail("");
+    setPassword("");
+    setConfirmpassword("");
+    setPasswordStrength("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  }, [activeTab]);
 
   // ---------------- VALIDATIONS ----------------
   const validateLogin = () => {
-    if (!email) return toast.error("Email is required"), false;
+    if (!email) return (toast.error("Email is required"), false);
     if (!isValidEmail(email))
-      return toast.error("Enter a valid email"), false;
-    if (!password) return toast.error("Password is required"), false;
+      return (toast.error("Enter a valid email"), false);
+    if (!password) return (toast.error("Password is required"), false);
     return true;
   };
 
   const validateSignup = () => {
-    if (!email) return toast.error("Email is required"), false;
+    if (!email) return (toast.error("Email is required"), false);
     if (!isValidEmail(email))
-      return toast.error("Enter a valid email"), false;
-    if (!password) return toast.error("Password is required"), false;
+      return (toast.error("Enter a valid email"), false);
+    if (!password) return (toast.error("Password is required"), false);
     if (password !== confirmpassword)
-      return toast.error("Passwords do not match"), false;
+      return (toast.error("Passwords do not match"), false);
     return true;
   };
 
@@ -70,7 +80,7 @@ const Auth = () => {
       const response = await apiClient.post(
         LOGIN_PAGE,
         { email, password },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (!response.data?.user) {
@@ -81,8 +91,15 @@ const Auth = () => {
       setUserInfo(response.data.user);
       toast.success("Login successful!");
       navigate("/profile");
-    } catch (error) {
-      toast.error("Incorrect email or password");
+    } catch (err) {
+      const details = err?.response?.data?.details;
+      if (Array.isArray(details) && details.length) {
+        toast.error(details.map((d) => d.message).join(", "));
+      } else {
+        toast.error(
+          err?.response?.data?.error || err?.message || "Something went wrong",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -97,17 +114,23 @@ const Auth = () => {
       const response = await apiClient.post(
         SIGNUP_ROUTE,
         { email, password },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
-      toast.success("Successfully signed up!");
-
       if (response.status === 201) {
+        toast.success("Successfully signed up!");
         setUserInfo(response.data.user);
         navigate("/profile");
       }
     } catch (err) {
-      toast.error("Signup failed. Try again.");
+      const details = err?.response?.data?.details;
+      if (Array.isArray(details) && details.length) {
+        toast.error(details.map((d) => d.message).join(", "));
+      } else {
+        toast.error(
+          err?.response?.data?.error || err?.message || "Something went wrong",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -115,12 +138,11 @@ const Auth = () => {
 
   // ---------------- ENTER KEY SUBMIT ----------------
   const handleEnter = (e) => {
+    if (loading) return;
     if (e.key === "Enter") {
       activeTab === "login" ? handleLogin() : handleSignup();
     }
   };
-
-
 
   return (
     <div
@@ -136,13 +158,16 @@ const Auth = () => {
       )}
 
       <div className="bg-white dark:bg-[#1f2129] shadow-xl rounded-3xl w-full max-w-5xl p-8 md:p-12 grid xl:grid-cols-2 gap-10 relative transition">
-        
         {/* ---------------- LEFT SECTION ---------------- */}
         <div className="flex flex-col items-center justify-center text-center gap-6">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold flex items-center justify-center gap-2 text-black dark:text-white">
               Welcome
-              <img src={Victory} alt="Victory" className="h-[70px] md:h-[90px]" />
+              <img
+                src={Victory}
+                alt="Victory"
+                className="h-[70px] md:h-[90px]"
+              />
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base mt-2">
               Fill in the details to get started with the best chat app!
@@ -150,7 +175,11 @@ const Auth = () => {
           </div>
 
           {/* ---------------- AUTH TABS ---------------- */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-sm">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full max-w-sm"
+          >
             <TabsList className="w-full grid grid-cols-2 border-b dark:border-gray-700">
               <TabsTrigger
                 value="login"
@@ -198,7 +227,7 @@ const Auth = () => {
               <Button
                 className="rounded-full p-5"
                 onClick={handleLogin}
-                disabled={loading} // disable button
+                disabled={loginDisabled} // disable button
               >
                 Login
               </Button>
@@ -238,8 +267,8 @@ const Auth = () => {
                     passwordStrength === "Weak"
                       ? "text-red-500"
                       : passwordStrength === "Medium"
-                      ? "text-yellow-500"
-                      : "text-green-500"
+                        ? "text-yellow-500"
+                        : "text-green-500"
                   }`}
                 >
                   Password Strength: {passwordStrength}
@@ -254,6 +283,10 @@ const Auth = () => {
                   className="rounded-full p-5 dark:bg-[#2a2c35] dark:text-white"
                   value={confirmpassword}
                   onChange={(e) => setConfirmpassword(e.target.value)}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    toast.error("Pasting is disabled for security.");
+                  }}
                 />
                 <div
                   className="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer"
@@ -266,7 +299,7 @@ const Auth = () => {
               <Button
                 className="rounded-full p-5"
                 onClick={handleSignup}
-                disabled={loading} // disable button
+                disabled={signupDisabled} // disable button
               >
                 Sign Up
               </Button>

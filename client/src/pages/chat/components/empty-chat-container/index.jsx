@@ -34,6 +34,8 @@ export const EmptyChatContainer = () => {
   // Motivational quotes collection
   const motivationalQuotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Don't try to be different. Just be good. To be good is different enough.", author: "Arthur Freed" },
+    { text: "The most common way people give up their power is by thinking they don't have any.", author: "Alice Walker" },
     { text: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" },
     { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
     { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
