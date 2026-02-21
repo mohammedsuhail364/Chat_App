@@ -26,6 +26,10 @@ app.use(
     credentials: true,
   }),
 );
+// this is for only uptime robot which every five minutes hit on our backend why because my render free tier sleep after 15mins of inactivity 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 // loose limiter for everything
 app.use("/api", apiLimiter);
 
