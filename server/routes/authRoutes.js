@@ -12,12 +12,13 @@ import {
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validate.js";
 import { loginSchema, signUpSchema } from "../schemas/auth.schema.js";
+import { loginLimiter, signupLimiter } from "../middlewares/rateLimit.js";
 
 const authRoutes = Router();
 const upload = multer({ dest: "uploads/profiles/" });
 
-authRoutes.post("/signup", validate(signUpSchema), signUp);
-authRoutes.post("/login",  validate(loginSchema),login);
+authRoutes.post("/signup", validate(signUpSchema), signupLimiter, signUp);
+authRoutes.post("/login",  validate(loginSchema),loginLimiter,login);
 authRoutes.get("/user-info", verifyToken, getUserInfo);
 authRoutes.post("/update-profile", verifyToken, updateProfile);
 authRoutes.post(
