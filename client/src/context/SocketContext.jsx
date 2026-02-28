@@ -20,13 +20,12 @@ export const SocketProvider = ({ children }) => {
         console.log("connected to socket server");
       });
       const handleReceiveMessage = (message) => {
-        const { selectedChatType, 
-          selectedChatData, 
+        const {
+          selectedChatType,
+          selectedChatData,
           addMessage,
-          addContactsInDMContacts
-           } =
-          useAppStore.getState();
-
+          addContactsInDMContacts,
+        } = useAppStore.getState();
         if (
           selectedChatType !== undefined &&
           (selectedChatData._id === message.sender._id ||
@@ -39,12 +38,14 @@ export const SocketProvider = ({ children }) => {
           console.log("message didnt receive");
         }
         addContactsInDMContacts(message);
-        
-        
       };
       const handleReceiveChannelMessage = (message) => {
-        const { selectedChatType, selectedChatData, addMessage,addChannelInChannelList } =
-          useAppStore.getState();
+        const {
+          selectedChatType,
+          selectedChatData,
+          addMessage,
+          addChannelInChannelList,
+        } = useAppStore.getState();
         if (
           selectedChatType !== undefined &&
           selectedChatData._id === message.channelId
@@ -53,9 +54,15 @@ export const SocketProvider = ({ children }) => {
         }
         addChannelInChannelList(message);
       };
+      const handleMessageStatusUpdate = ({ messageId, status }) => {
+        const { updateMessageStatus } = useAppStore.getState();
+        updateMessageStatus(messageId, status);
+      };
       socket.current.on("receiveMessage", handleReceiveMessage);
       socket.current.on("receive-channel-message", handleReceiveChannelMessage);
+      socket.current.on("messageStatusUpdate", handleMessageStatusUpdate);
       return () => {
+        socket.current.off("messageStatusUpdate", handleMessageStatusUpdate);
         socket.current.disconnect();
       };
     }

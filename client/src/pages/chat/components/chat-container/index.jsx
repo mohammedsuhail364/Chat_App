@@ -20,7 +20,7 @@ const ChatContainer = () => {
       {/* ---------------------------------------------------
          MESSAGE AREA (takes all remaining height)
       ---------------------------------------------------- */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         <MessageContainer />
       </div>
 

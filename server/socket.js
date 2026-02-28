@@ -1,6 +1,6 @@
 import { Server as SocketIoServer } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";      // NEW
-import { pubClient, subClient } from "./utils/redis.js";      // NEW
+import { createAdapter } from "@socket.io/redis-adapter"; // NEW
+import { pubClient, subClient } from "./utils/redis.js"; // NEW
 import Message from "./models/messagesModel.js";
 import Channel from "./models/channelModel.js";
 
@@ -30,7 +30,7 @@ const setupSocket = (server) => {
     console.log(`Client Disconnected: ${socket.id}`);
     const userId = socket.handshake.query.userId;
     if (userId) {
-      await pubClient.del(`socket:user:${userId}`);  // replaces userSocketMap.delete
+      await pubClient.del(`socket:user:${userId}`); // replaces userSocketMap.delete
       console.log(`Cleared Redis entry for: ${userId}`);
     }
   };
@@ -40,24 +40,44 @@ const setupSocket = (server) => {
   // CHANGED — added .lean() for faster MongoDB reads
   const sendMessage = async (message, socket) => {
     try {
-      const senderSocketId = await getUserSocketId(message.sender);       // was: userSocketMap.get(message.sender)
+      const senderSocketId = await getUserSocketId(message.sender); // was: userSocketMap.get(message.sender)
       const recipientSocketId = await getUserSocketId(message.recipient); // was: userSocketMap.get(message.recipient)
 
       const createdMessage = await Message.create(message);
       const messageData = await Message.findById(createdMessage._id)
         .populate("sender", "id email firstName lastName image color")
         .populate("recipient", "id email firstName lastName image color")
-        .lean();                                                           // NEW — plain JS object, faster
+        .lean(); // NEW — plain JS object, faster
 
       if (recipientSocketId) {
-        io.to(recipientSocketId).emit("receiveMessage", messageData);
-      }
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("receiveMessage", messageData);
+        // Recipient is online — upgrade to "delivered" immediately
+        await Message.findByIdAndUpdate(createdMessage._id, {
+          status: "delivered",
+        });
+
+        io.to(recipientSocketId).emit("receiveMessage", {
+          ...messageData,
+          status: "delivered",
+        });
+        io.to(senderSocketId).emit("receiveMessage", {
+          ...messageData,
+          status: "delivered",
+        });
+        // Also tell the sender it was delivered
+        io.to(senderSocketId).emit("messageStatusUpdate", {
+          messageId: createdMessage._id,
+          status: "delivered",
+        });
+      } else {
+        // Recipient offline — stays "sent"
+        io.to(senderSocketId).emit("receiveMessage", {
+          ...messageData,
+          status: "sent",
+        });
       }
     } catch (err) {
       console.error("sendMessage error:", err);
-      socket.emit("error", { message: "Failed to send message" });        // NEW — tell client something failed
+      socket.emit("error", { message: "Failed to send message" }); // NEW — tell client something failed
     }
   };
 
@@ -78,20 +98,20 @@ const setupSocket = (server) => {
           timestamp: new Date(),
           fileUrl,
         }),
-        Channel.findById(channelId).populate("members").lean(),           // was: separate query AFTER create
+        Channel.findById(channelId).populate("members").lean(), // was: separate query AFTER create
       ]);
 
       // these two can also run together
       const [messageData] = await Promise.all([
         Message.findById(createdMessage._id)
           .populate("sender", "id email firstName lastName image color")
-          .lean(),                                                         // NEW — .lean() replaces ._doc
+          .lean(), // NEW — .lean() replaces ._doc
         Channel.findByIdAndUpdate(channelId, {
           $push: { messages: createdMessage._id },
         }),
       ]);
 
-      const finalData = { ...messageData, channelId: channel._id };      // was: messageData._doc (not needed with .lean())
+      const finalData = { ...messageData, channelId: channel._id }; // was: messageData._doc (not needed with .lean())
 
       if (channel && channel.members) {
         for (const member of channel.members) {
@@ -101,7 +121,9 @@ const setupSocket = (server) => {
           }
         }
         // admin
-        const adminSocketId = await getUserSocketId(channel.admin._id.toString()); // was: userSocketMap.get()
+        const adminSocketId = await getUserSocketId(
+          channel.admin._id.toString(),
+        ); // was: userSocketMap.get()
         if (adminSocketId) {
           io.to(adminSocketId).emit("receive-channel-message", finalData);
         }
@@ -112,7 +134,8 @@ const setupSocket = (server) => {
     }
   };
 
-  io.on("connection", async (socket) => {                                 // CHANGED — added async
+  io.on("connection", async (socket) => {
+    // CHANGED — added async
     const userId = socket.handshake.query.userId;
     if (userId) {
       await pubClient.set(`socket:user:${userId}`, socket.id, { EX: 86400 }); // was: userSocketMap.set() — EX = auto delete after 24hrs
@@ -123,8 +146,21 @@ const setupSocket = (server) => {
 
     // CHANGED — pass socket into handlers so they can emit errors back
     socket.on("sendMessage", (message) => sendMessage(message, socket));
-    socket.on("send-channel-message", (message) => sendChannelMessage(message, socket));
-    socket.on("disconnect", () => disconnect(socket));                    // disconnect unchanged in behavior
+    socket.on("messageSeen", async ({ messageId, senderId }) => {
+      await Message.findByIdAndUpdate(messageId, { status: "seen" });
+
+      const senderSocketId = await pubClient.get(`socket:user:${senderId}`);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageStatusUpdate", {
+          messageId,
+          status: "seen",
+        });
+      }
+    });
+    socket.on("send-channel-message", (message) =>
+      sendChannelMessage(message, socket),
+    );
+    socket.on("disconnect", () => disconnect(socket)); // disconnect unchanged in behavior
   });
 };
 

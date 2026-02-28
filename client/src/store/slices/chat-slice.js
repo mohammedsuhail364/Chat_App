@@ -40,6 +40,7 @@ export const createChatSlice = (set, get) => ({
         ...selectedChatMessages,
         {
           ...message,
+          status: message.status || "sent",
           recipient:
             selectedChatType === "channel"
               ? message.recipient
@@ -56,7 +57,7 @@ export const createChatSlice = (set, get) => ({
     const channels = get().channels;
     const data = channels.find((channel) => channel._id === message.channelId);
     const index = channels.findIndex(
-      (channel) => channel._id === message.channelId
+      (channel) => channel._id === message.channelId,
     );
     if (index !== -1 && index !== undefined) {
       channels.splice(index, 1);
@@ -71,16 +72,23 @@ export const createChatSlice = (set, get) => ({
         : message.sender._id;
     const fromData =
       message.sender._id === userId ? message.recipient : message.sender;
-    const dmContacts=get().directMessagesContacts;
-    const data=dmContacts.find((contact)=>contact._id===fromId);
-    const index=dmContacts.findIndex((contact)=>contact._id===fromId);
-    if(index!==-1 && index!==undefined){
-      dmContacts.splice(index,1);
+    const dmContacts = get().directMessagesContacts;
+    const data = dmContacts.find((contact) => contact._id === fromId);
+    const index = dmContacts.findIndex((contact) => contact._id === fromId);
+    if (index !== -1 && index !== undefined) {
+      dmContacts.splice(index, 1);
       dmContacts.unshift(data);
+    } else {
+      dmContacts.unshift(fromData);
     }
-    else{
-      dmContacts.unshift(fromData)
-    }
-    set({directMessagesContacts:dmContacts});
+    set({ directMessagesContacts: dmContacts });
+  },
+  updateMessageStatus: (messageId, status) => {
+    const selectedChatMessages = get().selectedChatMessages;
+    set({
+      selectedChatMessages: selectedChatMessages.map((msg) =>
+        msg._id === messageId ? { ...msg, status } : msg,
+      ),
+    });
   },
 });

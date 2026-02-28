@@ -12,11 +12,12 @@ import { IoMdArrowRoundDown } from "react-icons/io";
 import { IoCloseSharp } from "react-icons/io5";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { getColor } from "@/lib/utils";
-
+import { useSocket } from "@/context/SocketContext";
+import { LuClock, LuCheckCheck, LuEye, LuCheck } from "react-icons/lu";
 const MessageContainer = () => {
-  const scrollRef = useRef();
+  const scrollRef = useRef(0);
   const containerRef = useRef(null);
-
+  const socket = useSocket();
   const {
     selectedChatType,
     selectedChatData,
@@ -25,12 +26,19 @@ const MessageContainer = () => {
     setFileDownloadProgress,
     setIsDownloading,
     userInfo,
+    closeChat,
   } = useAppStore();
-
   const [showImage, setShowImage] = useState(false);
   const [imageURL, setImageURL] = useState(null);
+  const seenEmittedRef = useRef(new Set());
 
   const [isFetchingOldMessages, setIsFetchingOldMessages] = useState(false);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeChat()
+      // Add your logic here, e.g., close a modal or cancel an action.
+    }
+  });
 
   /* ---------------------------------------------------------
      FETCH MESSAGES (DM or CHANNEL)
@@ -41,7 +49,7 @@ const MessageContainer = () => {
         const response = await apiClient.post(
           GET_ALL_MESSAGES_ROUTE,
           { id: selectedChatData._id },
-          { withCredentials: true }
+          { withCredentials: true },
         );
         if (response.data.messages) {
           setSelectedChatMessages(response.data.messages);
@@ -55,7 +63,7 @@ const MessageContainer = () => {
       try {
         const response = await apiClient.get(
           `${GET_CHANNEL_MESSAGES}/${selectedChatData._id}`,
-          { withCredentials: true }
+          { withCredentials: true },
         );
         if (response.data.messages) {
           setSelectedChatMessages(response.data.messages);
@@ -64,12 +72,42 @@ const MessageContainer = () => {
         console.log(error);
       }
     };
+    console.log("selectedChatData -> ", selectedChatData);
+    console.log("selectedChatType -> ", selectedChatType);
 
     if (selectedChatData._id) {
       selectedChatType === "contact" ? getMessages() : getChannelMessages();
     }
   }, [selectedChatData, selectedChatType]);
+  // Clear the set when switching chats
+  useEffect(() => {
+    seenEmittedRef.current = new Set();
+  }, [selectedChatData._id]);
 
+  // Step 4 — Emit messageSeen (with duplicate guard)
+  useEffect(() => {
+    if (
+      !socket ||
+      !selectedChatMessages.length ||
+      selectedChatType !== "contact"
+    )
+      return;
+
+    const unseenMessages = selectedChatMessages.filter(
+      (msg) =>
+        msg.sender === selectedChatData._id &&
+        msg.status !== "seen" &&
+        !seenEmittedRef.current.has(msg._id), // ← key fix
+    );
+
+    unseenMessages.forEach((msg) => {
+      seenEmittedRef.current.add(msg._id); // ← mark before emitting
+      socket.emit("messageSeen", {
+        messageId: msg._id,
+        senderId: selectedChatData._id,
+      });
+    });
+  }, [selectedChatMessages, selectedChatData]);
   /* ---------------------------------------------------------
      AUTO SCROLL TO BOTTOM ON NEW MESSAGES
   ---------------------------------------------------------- */
@@ -139,6 +177,7 @@ const MessageContainer = () => {
      MESSAGE RENDERER (LOOP)
   ---------------------------------------------------------- */
   const renderMessages = () => {
+    if (!Array.isArray(selectedChatMessages)) return null;
     let lastDate = null;
 
     return selectedChatMessages.map((message, index) => {
@@ -245,15 +284,39 @@ const MessageContainer = () => {
         }`}
       >
         {message.sender !== selectedChatData._id ? (
-          // User sent → timestamp then tick
           <>
             <span>{moment(message.timestamp).format("LT")}</span>
-            <span className="text-[#8417ff]/70 text-xs">✓</span>
+
+            {/* STATUS ICON */}
+            {!message.status && (
+              <LuClock
+                className="text-gray-500 animate-[spin_3s_linear_infinite]"
+                style={{ animationTimingFunction: "steps(8, end)" }}
+              />
+            )}
+            {message.status === "sent" && <LuCheck className="text-gray-500" />}
+
+            {message.status === "delivered" && (
+              <LuCheckCheck
+                className="
+          text-[#8417ff]
+          animate-[popIn_0.4s_cubic-bezier(0.175,0.885,0.32,1.275)]
+        "
+              />
+            )}
+
+            {message.status === "seen" && (
+              <LuEye
+                className="
+          text-blue-400
+          animate-[blink_1.5s_ease-in-out_2]
+        "
+              />
+            )}
           </>
         ) : (
-          // User received → tick then timestamp
           <>
-            <span className="text-[#8417ff]/70 text-xs">✓</span>
+            <span className="text-gray-500 text-xs"></span>
             <span>{moment(message.timestamp).format("LT")}</span>
           </>
         )}
@@ -346,7 +409,7 @@ const MessageContainer = () => {
             />
             <AvatarFallback
               className={`uppercase h-7 w-7 flex items-center justify-center rounded-full ${getColor(
-                message.sender.color
+                message.sender.color,
               )}`}
             >
               {message.sender.firstName
