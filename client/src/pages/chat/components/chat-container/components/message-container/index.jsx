@@ -35,7 +35,7 @@ const MessageContainer = () => {
   const [isFetchingOldMessages, setIsFetchingOldMessages] = useState(false);
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
-      closeChat()
+      closeChat();
       // Add your logic here, e.g., close a modal or cancel an action.
     }
   });
@@ -72,8 +72,6 @@ const MessageContainer = () => {
         console.log(error);
       }
     };
-    console.log("selectedChatData -> ", selectedChatData);
-    console.log("selectedChatType -> ", selectedChatType);
 
     if (selectedChatData._id) {
       selectedChatType === "contact" ? getMessages() : getChannelMessages();
@@ -152,8 +150,8 @@ const MessageContainer = () => {
   const downloadFile = async (url) => {
     setIsDownloading(true);
     setFileDownloadProgress(0);
-
-    const response = await apiClient.get(`${HOST}/${url}`, {
+    
+    const response = await apiClient.get(url, {
       responseType: "blob",
       onDownloadProgress: ({ loaded, total }) => {
         setFileDownloadProgress(Math.round((loaded * 100) / total));
@@ -179,7 +177,7 @@ const MessageContainer = () => {
   const renderMessages = () => {
     if (!Array.isArray(selectedChatMessages)) return null;
     let lastDate = null;
-
+    
     return selectedChatMessages.map((message, index) => {
       const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
       const showDate = messageDate !== lastDate;
@@ -246,17 +244,17 @@ const MessageContainer = () => {
             <div className="relative group">
               <img
                 onClick={() => {
-                  setImageURL(message.fileUrl);
+                  setImageURL(`${HOST}/${message.fileUrl}`);
                   setShowImage(true);
                 }}
                 src={`${HOST}/${message.fileUrl}`}
                 className="max-h-[250px] sm:max-h-[300px] w-auto rounded-xl cursor-pointer object-contain transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-xl flex items-center justify-center">
+              {/* <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-xl flex items-center justify-center">
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
                   Click to view
                 </span>
-              </div>
+              </div> */}
             </div>
           ) : (
             /* NORMAL FILE */
@@ -368,17 +366,17 @@ const MessageContainer = () => {
             <div className="relative group">
               <img
                 onClick={() => {
-                  setImageURL(message.fileUrl);
+                  setImageURL(`${HOST}/${message.fileUrl}`);
                   setShowImage(true);
                 }}
                 src={`${HOST}/${message.fileUrl}`}
                 className="max-h-[250px] sm:max-h-[300px] w-auto rounded-xl cursor-pointer object-contain transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-xl flex items-center justify-center">
+              {/* <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-xl flex items-center justify-center">
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
                   Click to view
                 </span>
-              </div>
+              </div> */}
             </div>
           ) : (
             <div className="flex items-center justify-center gap-3 group">
@@ -467,7 +465,7 @@ const MessageContainer = () => {
       {showImage && (
         <div className="fixed z-[1000] top-0 left-0 h-screen w-screen flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
           <img
-            src={`${HOST}/${imageURL}`}
+            src={imageURL}
             className="max-h-[80vh] max-w-full object-contain rounded-md"
           />
 

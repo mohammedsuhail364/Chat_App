@@ -116,6 +116,8 @@ const setupSocket = (server) => {
       if (channel && channel.members) {
         for (const member of channel.members) {
           const memberSocketId = await getUserSocketId(member._id.toString()); // was: userSocketMap.get()
+          
+           
           if (memberSocketId) {
             io.to(memberSocketId).emit("receive-channel-message", finalData);
           }
