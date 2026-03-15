@@ -9,6 +9,7 @@ import apiClient from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
 import { useAppStore } from "./store";
 import { toast } from "sonner";
+import Loader from "./components/Loader";
 
 /* --------------------------------------------------------
    PROTECTED ROUTE
@@ -69,11 +70,7 @@ const App = () => {
      (Prevents flash of incorrect UI)
 --------------------------------------------------------- */
   if (loading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-black text-white text-2xl">
-        Loading...
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

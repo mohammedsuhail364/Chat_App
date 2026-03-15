@@ -14,14 +14,15 @@ import apiClient from "@/lib/api-client";
 
 import {
   ADD_PROFILE_IMAGE_ROUTE,
-  HOST,
   REMOVE_PROFILE_IMAGE_ROUTE,
   UPDATE_PROFILE_ROUTE,
 } from "@/utils/constants";
+import Loader from "@/components/Loader";
 
 const Profile = () => {
   const { userInfo, setUserInfo } = useAppStore();
   const navigate = useNavigate();
+  const [loader, setLoader] = useState(false);
 
   /* -------------------------------------------------------
      LOCAL STATE
@@ -44,7 +45,7 @@ const Profile = () => {
       setSelectedColor(userInfo.color);
     }
     if (userInfo.image) {
-      setImage(`${HOST}/${userInfo.image}`);
+      setImage(userInfo.image);
     }
   }, [userInfo]);
 
@@ -52,8 +53,8 @@ const Profile = () => {
      VALIDATE FORM
   -------------------------------------------------------- */
   const validateProfile = () => {
-    if (!firstName) return toast.error("First name is required"), false;
-    if (!lastName) return toast.error("Last name is required"), false;
+    if (!firstName) return (toast.error("First name is required"), false);
+    if (!lastName) return (toast.error("Last name is required"), false);
     return true;
   };
 
@@ -67,7 +68,7 @@ const Profile = () => {
       const response = await apiClient.post(
         UPDATE_PROFILE_ROUTE,
         { firstName, lastName, color: selectedColor },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (response.status === 200) {
@@ -92,22 +93,33 @@ const Profile = () => {
      IMAGE UPLOAD / DELETE
   -------------------------------------------------------- */
   const handleFileInputClick = () => fileInputRef.current.click();
-// todo : make it cloudinary image then only it shows all the time
+  // todo : make it cloudinary image then only it shows all the time
   const handleImageChange = async (event) => {
-    const file = event.target.files[0];
-    const formData = new FormData();
-    formData.append("profile-image", file);
+    setLoader(true);
+    try {
+      const file = event.target.files[0];
+      const formData = new FormData();
+      formData.append("profile-image", file);
 
-    const response = await apiClient.post(ADD_PROFILE_IMAGE_ROUTE, formData, {
-      withCredentials: true,
-    });    
-    if (response.status === 200) {
-      setUserInfo({ ...userInfo, image: response.data.image });
-      toast.success("Image updated successfully");
+      const response = await apiClient.post(ADD_PROFILE_IMAGE_ROUTE, formData, {
+        withCredentials: true,
+      });
+
+      if (response.status === 200) {
+        setUserInfo({ ...userInfo, image: response.data.image });
+        setImage(response.data.image);
+        toast.success("Image updated successfully");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setLoader(false);
     }
   };
 
   const handleDeleteImage = async () => {
+    setLoader(true);
     try {
       const response = await apiClient.delete(REMOVE_PROFILE_IMAGE_ROUTE, {
         withCredentials: true,
@@ -120,8 +132,12 @@ const Profile = () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoader(false);
     }
   };
+  
+  if (loader) return <Loader/>
 
   return (
     <div className="bg-[#14151a] min-h-screen flex items-center justify-center px-4 py-10">
@@ -150,12 +166,10 @@ const Profile = () => {
            - Form side
         -------------------------------------------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-
           {/* -------------------------------------------------------
              AVATAR + COLOR SELECTOR
           -------------------------------------------------------- */}
           <div className="flex flex-col items-center gap-6">
-
             {/* Avatar */}
             <div
               className="relative flex items-center justify-center"
@@ -234,7 +248,6 @@ const Profile = () => {
              FORM SECTION
           -------------------------------------------------------- */}
           <div className="flex flex-col gap-5 text-white">
-
             {/* Email (disabled) */}
             <Input
               value={userInfo.email}

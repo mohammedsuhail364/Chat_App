@@ -19,10 +19,8 @@ const userSchema = mongoose.Schema({
     type: String,
     required: false,
   },
-  image: {
-    type: String,
-    required: false,
-  },
+  image: { type: String, default: null },
+  imagePublicId: { type: String, default: null },
   color: {
     type: Number,
     required: false,

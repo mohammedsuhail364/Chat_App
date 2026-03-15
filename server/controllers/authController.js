@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt"; // or { compare } from "bcrypt" if you prefer
-import { renameSync, unlinkSync } from "fs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
+import { v2 as cloudinary } from "cloudinary";
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 const createToken = (email, userId) => {
   return jwt.sign({ email, userId }, process.env.JWT_KEY, {
@@ -42,14 +42,16 @@ export const login = async (req, res) => {
     const { email, password } = req.body; // already validated by Zod
 
     const user = await User.findOne({ email }).select(
-      "+password email profileSetup firstName lastName image color"
+      "+password email profileSetup firstName lastName image color",
     );
 
     // Prevent user enumeration: same error for "not found" and "wrong password"
     if (!user) {
       return res.status(401).json({
         error: "Invalid email or password",
-        details: [{ field: "body.email", message: "Invalid email or password" }],
+        details: [
+          { field: "body.email", message: "Invalid email or password" },
+        ],
       });
     }
 
@@ -57,15 +59,17 @@ export const login = async (req, res) => {
     if (!ok) {
       return res.status(401).json({
         error: "Invalid email or password",
-        details: [{ field: "body.password", message: "Invalid email or password" }],
+        details: [
+          { field: "body.password", message: "Invalid email or password" },
+        ],
       });
     }
 
     res.cookie("jwt", createToken(user.email, user.id), {
       maxAge,
-      httpOnly: true,        // IMPORTANT: prevents JS access
-      secure: true,          // HTTPS only
-      sameSite: "None",      // required for cross-site cookies
+      httpOnly: true, // IMPORTANT: prevents JS access
+      secure: true, // HTTPS only
+      sameSite: "None", // required for cross-site cookies
       path: "/",
     });
 
@@ -153,12 +157,9 @@ export const addProfileImage = async (req, res, next) => {
     if (!req.file) {
       return res.status(400).send("File is required");
     }
-    const date = Date.now();
-    let fileName = "uploads/profiles/" + date + req.file.originalname;
-    renameSync(req.file.path, fileName);
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
-      { image: fileName },
+      { image: req.file.path, imagePublicId: req.file.filename },
       { new: true, runValidaters: true },
     );
     return res.status(200).json({
@@ -176,10 +177,12 @@ export const removeProfileImage = async (req, res, next) => {
     if (!user) {
       return res.status(404).send("User Not Found.");
     }
-    if (user.image) {
-      unlinkSync(user.image);
+    if (user.imagePublicId) {
+      await cloudinary.uploader.destroy(user.imagePublicId); // deletes from Cloudinary
     }
+
     user.image = null;
+    user.imagePublicId = null;
     await user.save();
     return res.status(200).send("Profile image deleted Successfully ");
   } catch (error) {

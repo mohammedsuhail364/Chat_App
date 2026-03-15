@@ -19,7 +19,7 @@ import Lottie from "react-lottie";
 import { Input } from "@/components/ui/input";
 import { animationDefaultOptions, getColor } from "@/lib/utils";
 import apiClient from "@/lib/api-client";
-import { HOST, SEARCH_CONTACTS_ROUTES } from "@/utils/constants";
+import { SEARCH_CONTACTS_ROUTES } from "@/utils/constants";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 
@@ -134,7 +134,7 @@ const NewDM = () => {
                     <Avatar className="h-12 w-12 rounded-full overflow-hidden">
                       {contact.image ? (
                         <AvatarImage
-                          src={`${HOST}/${contact.image}`}
+                          src={contact.image}
                           className="object-cover w-full h-full rounded-full"
                         />
                       ) : (

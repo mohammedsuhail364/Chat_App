@@ -2,13 +2,24 @@
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
-    './app/**/*.{js,jsx}',
-    './src/**/*.{js,jsx}',
+    "./pages/**/*.{js,jsx}",
+    "./components/**/*.{js,jsx}",
+    "./app/**/*.{js,jsx}",
+    "./src/**/*.{js,jsx}",
   ],
   prefix: "",
   theme: {
+    extend: {
+      keyframes: {
+        fadeUp: {
+          "0%": { opacity: "0", transform: "translateY(8px) scale(0.95)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+      },
+      animation: {
+        fadeUp: "fadeUp 0.4s ease forwards",
+      },
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -74,4 +85,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};

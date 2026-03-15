@@ -13,9 +13,10 @@ import { verifyToken } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validate.js";
 import { loginSchema, signUpSchema } from "../schemas/auth.schema.js";
 import { loginLimiter, signupLimiter } from "../middlewares/rateLimit.js";
+import { storage } from "../config/cloudinary.js";
 
 const authRoutes = Router();
-const upload = multer({ dest: "uploads/profiles/" });
+const upload = multer({ storage});
 
 authRoutes.post("/signup", validate(signUpSchema), signupLimiter, signUp);
 authRoutes.post("/login",  validate(loginSchema),loginLimiter,login);
