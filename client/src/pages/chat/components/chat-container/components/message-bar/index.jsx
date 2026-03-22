@@ -45,19 +45,6 @@ const MessageBar = () => {
   }, []);
 
   /* --------------------------------------------------------
-     SEND MESSAGE WHEN PRESSING ENTER
-  --------------------------------------------------------- */
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === "Enter" && message.trim()) {
-        handleSendMessage();
-      }
-    };
-    document.addEventListener("keydown", handleKeyPress);
-    return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [message]);
-
-  /* --------------------------------------------------------
      CLICK ATTACHMENT BUTTON => OPEN FILE INPUT
   --------------------------------------------------------- */
   const handleAttachmentClick = () => {
@@ -109,8 +96,8 @@ const MessageBar = () => {
       });
 
       setIsUploading(false);
-      console.log(response,"response");
-      
+      console.log(response, "response");
+
       if (response.status === 200 && response.data) {
         const payload = {
           sender: userInfo.id,
@@ -168,6 +155,9 @@ const MessageBar = () => {
           placeholder="Enter Message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && message.trim()) handleSendMessage();
+          }}
         />
 
         {/* ATTACHMENT BUTTON */}
