@@ -109,7 +109,8 @@ const MessageBar = () => {
       });
 
       setIsUploading(false);
-
+      console.log(response,"response");
+      
       if (response.status === 200 && response.data) {
         const payload = {
           sender: userInfo.id,

@@ -1,5 +1,4 @@
 import Messages from "../models/messagesModel.js";
-import {mkdirSync, renameSync} from 'fs'
 export const getMessages = async (req, res, next) => {
   try {
     const user1 = req.userId;
@@ -23,20 +22,16 @@ export const getMessages = async (req, res, next) => {
 };
 export const uploadFile = async (req, res, next) => {
   try {
-    if(!req.file){
-      return res.status(400).send("File is required")
+    if (!req.file) {
+      return res.status(400).send("File is required");
     }
-    console.log('success');
+    console.log(req.file);
     
-    const date=Date.now();
-    let fileDir=`uploads/files/${date}`
-    let fileName=`${fileDir}/${req.file.originalname}`;
-    mkdirSync(fileDir,{recursive:true})
-    renameSync(req.file.path,fileName)
-
-    return res.status(200).json({ filePath:fileName });
+    return res.status(200).json({
+      filePath: req.file.path, // Cloudinary CDN URL
+    });
   } catch (error) {
-    console.log("error during file upload",error);
+    console.log("error during file upload", error);
     return res.status(500).send("Internal server Error");
   }
 };

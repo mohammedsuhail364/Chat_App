@@ -18,4 +18,19 @@ export const storage = new CloudinaryStorage({
   },
 });
 
+export const fileStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    let resourceType = "raw";
+    if (file.mimetype.startsWith("image/")) resourceType = "image";
+    if (file.mimetype.startsWith("video/")) resourceType = "video";
+
+    return {
+      folder: "chat-files",
+      resource_type: resourceType,
+      public_id: `${Date.now()}-${file.originalname}`,
+    };
+  },
+});
+
 export default cloudinary;
