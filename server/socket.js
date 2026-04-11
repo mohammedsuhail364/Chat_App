@@ -116,8 +116,7 @@ const setupSocket = (server) => {
       if (channel && channel.members) {
         for (const member of channel.members) {
           const memberSocketId = await getUserSocketId(member._id.toString()); // was: userSocketMap.get()
-          
-           
+
           if (memberSocketId) {
             io.to(memberSocketId).emit("receive-channel-message", finalData);
           }
@@ -145,6 +144,12 @@ const setupSocket = (server) => {
     } else {
       console.log("User ID not provided during connection.");
     }
+    // just update status — frontend fetches messages itself
+    // this is for cases who goes offline and comes back online, we want to mark all their sent messages as delivered
+    await Message.updateMany(
+      { recipient: userId, status: "sent" },
+      { status: "delivered" },
+    );
 
     // CHANGED — pass socket into handlers so they can emit errors back
     socket.on("sendMessage", (message) => sendMessage(message, socket));
