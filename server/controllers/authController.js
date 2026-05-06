@@ -125,7 +125,7 @@ export const updateProfile = async (req, res, next) => {
     const { userId } = req;
     const { firstName, lastName, color } = req.body;
     if (!firstName || !lastName) {
-      return req.status(400).send("Firstname and lastname is required");
+      return res.status(400).send("Firstname and lastname is required");
     }
 
     const userData = await User.findByIdAndUpdate(
@@ -136,7 +136,7 @@ export const updateProfile = async (req, res, next) => {
         color,
         profileSetup: true,
       },
-      { new: true, runValidaters: true },
+      { new: true, runValidators: true },
     );
     return res.status(200).json({
       id: userData.id,
@@ -160,7 +160,7 @@ export const addProfileImage = async (req, res, next) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
       { image: req.file.path, imagePublicId: req.file.filename },
-      { new: true, runValidaters: true },
+      { new: true, runValidators: true },
     );
     return res.status(200).json({
       image: updatedUser.image,

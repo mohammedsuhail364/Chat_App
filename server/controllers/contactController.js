@@ -46,7 +46,7 @@ export const getContactsForDMList = async (req, res, next) => {
             $cond: {
               if: { $eq: ["$sender", userId] },
               then: "$recipient",
-              else: null,
+              else: "$sender",
             },
           },
           lastMessageTime: { $first: "$timestamp" },

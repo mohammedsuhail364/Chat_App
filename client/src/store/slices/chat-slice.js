@@ -91,4 +91,9 @@ export const createChatSlice = (set, get) => ({
       ),
     });
   },
+  prependMessages: (older) => {
+    set({
+      selectedChatMessages: [...older, ...get().selectedChatMessages],
+    });
+  },
 });
