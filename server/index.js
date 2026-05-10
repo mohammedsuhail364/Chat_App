@@ -31,7 +31,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 // loose limiter for everything
-// app.use("/api", apiLimiter);
+app.use("/api", apiLimiter);
 
 
 app.use(cookieParser());

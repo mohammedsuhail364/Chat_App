@@ -30,7 +30,19 @@ export const getContactsForDMList = async (req, res, next) => {
   try {
     let { userId } = req;
     userId = new mongoose.Types.ObjectId(userId);
-
+    // This function builds the "recent chats" sidebar for a user
+    // 
+    // 1. $match — fetch all messages where this user is sender or recipient
+    // 2. $sort — sort messages by timestamp descending (newest first)
+    // 3. $group — collapse 100+ messages into unique contacts (one entry per conversation)
+    //    - group key is the "other person": if I sent it → recipient, if I received it → sender
+    //    - $first picks the most recent timestamp as lastMessageTime (works because we sorted first)
+    // 4. $lookup — join Users collection to get name, email, image for each contact
+    //    - returns an array by default
+    // 5. $unwind — flatten the contactInfo array into a plain object
+    // 6. $project — pick only the fields the frontend needs, flatten contactInfo.x → x
+    // 7. $sort — sort contacts by lastMessageTime descending
+    //    - needed again because $group does not preserve order
     const contacts = await Messages.aggregate([
       {
         $match: {
@@ -83,7 +95,6 @@ export const getContactsForDMList = async (req, res, next) => {
         $sort: { lastMessageTime: -1 },
       },
     ]);
-
     return res.status(200).json({ contacts });
   } catch (error) {
     console.log(error);
