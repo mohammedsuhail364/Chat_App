@@ -57,7 +57,6 @@ const startServer = async () => {
     await connectRedis();                    // 1. Redis first
     await mongoose.connect(databaseURL);     // 2. MongoDB second
     console.log("DB connected");
-
     const server = app.listen(port, () => {
       console.log(`Server running at http://localhost:${port}`);
     });

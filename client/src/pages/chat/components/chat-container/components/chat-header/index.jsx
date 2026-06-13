@@ -5,16 +5,21 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { RiCloseFill } from "react-icons/ri";
 
 const ChatHeader = () => {
-  const { closeChat, selectedChatData, selectedChatType } = useAppStore();
-
+  const { closeChat, selectedChatData, selectedChatType, typingUsers } =
+    useAppStore();
+  const isTyping =
+    selectedChatType === "contact" &&
+    !!typingUsers &&
+    selectedChatData._id in typingUsers &&
+    typingUsers[selectedChatData._id];
   return (
-    <div className="h-[10vh] border-b-2 border-[#2f303b] flex items-center 
+    <div
+      className="h-[10vh] border-b-2 border-[#2f303b] flex items-center 
       px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 
       py-4 sm:py-6 md:py-8 
       justify-between w-full"
     >
       <div className="flex items-center justify-between w-full gap-4">
-
         {/* LEFT SIDE: Avatar + Name */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-12 h-12 relative flex-shrink-0">
@@ -29,7 +34,7 @@ const ChatHeader = () => {
                 ) : (
                   <div
                     className={`uppercase h-12 w-12 text-lg border flex items-center justify-center rounded-full ${getColor(
-                      selectedChatData.color
+                      selectedChatData.color,
                     )}`}
                   >
                     {selectedChatData.firstName
@@ -46,12 +51,19 @@ const ChatHeader = () => {
           </div>
 
           {/* USER NAME / CHANNEL NAME */}
-          <div className="truncate text-sm sm:text-base md:text-lg">
-            {selectedChatType === "channel" && selectedChatData.name}
-            {selectedChatType === "contact" &&
-              (selectedChatData.firstName
-                ? `${selectedChatData.firstName} ${selectedChatData.lastName}`
-                : selectedChatData.email)}
+          <div className="truncate">
+            <div className="text-sm sm:text-base md:text-lg">
+              {selectedChatType === "channel" && selectedChatData.name}
+              {selectedChatType === "contact" &&
+                (selectedChatData.firstName
+                  ? `${selectedChatData.firstName} ${selectedChatData.lastName}`
+                  : selectedChatData.email)}
+            </div>
+            {isTyping && (
+              <div className="text-xs text-[#8417ff] animate-pulse">
+                typing...
+              </div>
+            )}
           </div>
         </div>
 

@@ -12,7 +12,7 @@ const MessageBar = () => {
   const emojiRef = useRef();
   const fileInputRef = useRef();
   const socket = useSocket();
-
+  const typingTimeoutRef = useRef(null);
   const {
     selectedChatType,
     selectedChatData,
@@ -29,6 +29,25 @@ const MessageBar = () => {
   --------------------------------------------------------- */
   const handleAddEmoji = (emoji) => {
     setMessage((msg) => msg + emoji.emoji);
+  };
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    // only for DMs,not channels
+    if (selectedChatType !== "contact") return;
+    // emit "typing" once (not on every keystroke)
+    socket.emit("typing", {
+      senderId: userInfo.id,
+      recipientId: selectedChatData._id,
+    });
+    
+    // reset the stop typing timer on every keystroke
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", {
+        senderId: userInfo.id,
+        recipientId: selectedChatData._id,
+      });
+    },5000);
   };
 
   /* --------------------------------------------------------
@@ -74,6 +93,12 @@ const MessageBar = () => {
     }
 
     setMessage("");
+    if (selectedChatType === "contact") {
+      socket.emit("stopTyping", {
+        senderId: userInfo.id,
+        recipientId: selectedChatData._id,
+      });
+    }
   };
 
   /* --------------------------------------------------------
@@ -154,7 +179,8 @@ const MessageBar = () => {
           "
           placeholder="Enter Message"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          // onChange={(e) => setMessage(e.target.value)}
+          onChange={handleTyping}
           onKeyDown={(e) => {
             if (e.key === "Enter" && message.trim()) handleSendMessage();
           }}

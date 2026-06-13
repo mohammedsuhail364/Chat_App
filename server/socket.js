@@ -167,6 +167,18 @@ const setupSocket = (server) => {
     socket.on("send-channel-message", (message) =>
       sendChannelMessage(message, socket),
     );
+    socket.on("typing",async({senderId,recipientId})=>{
+      const recipientSocketId=await getUserSocketId(recipientId);
+      if(recipientSocketId){
+        io.to(recipientSocketId).emit("userTyping",{senderId});
+      }
+    })
+    socket.on("stopTyping",async({senderId,recipientId})=>{
+      const recipientSocketId=await getUserSocketId(recipientId);
+      if(recipientSocketId){
+        io.to(recipientSocketId).emit("userStopTyping",{senderId});
+      }
+    })
     socket.on("disconnect", () => disconnect(socket)); // disconnect unchanged in behavior
   });
 };

@@ -8,6 +8,11 @@ export const createChatSlice = (set, get) => ({
   fileUploadProgress: 0,
   fileDownloadProgress: 0,
   channels: [],
+  typingUsers: {}, //{[contactId]:true/false}
+  setTyping: (contactId, isTyping) =>
+    set((state) => ({
+      typingUsers: { ...state.typingUsers, [contactId]: isTyping },
+    })),
   setChannels: (channels) => set({ channels }),
   setIsUploading: (isUploading) => set({ isUploading }),
   setIsDownloading: (isDownloading) => set({ isDownloading }),

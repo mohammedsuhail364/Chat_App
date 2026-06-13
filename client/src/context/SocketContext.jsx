@@ -58,11 +58,24 @@ export const SocketProvider = ({ children }) => {
         const { updateMessageStatus } = useAppStore.getState();
         updateMessageStatus(messageId, status);
       };
+      const handleUserTyping = ({ senderId }) => {
+        const { setTyping } = useAppStore.getState();
+        setTyping(senderId, true);
+      };
+      const handleUserStopTyping = ({ senderId }) => {
+        const { setTyping } = useAppStore.getState();
+        setTyping(senderId, false);
+      };
       socket.current.on("receiveMessage", handleReceiveMessage);
       socket.current.on("receive-channel-message", handleReceiveChannelMessage);
       socket.current.on("messageStatusUpdate", handleMessageStatusUpdate);
+      socket.current.on("userTyping", handleUserTyping);
+      socket.current.on("userStopTyping", handleUserStopTyping);
       return () => {
         socket.current.off("messageStatusUpdate", handleMessageStatusUpdate);
+        socket.current.off("userTyping", handleUserTyping);
+        socket.current.off("userStopTyping", handleUserStopTyping);
+
         socket.current.disconnect();
       };
     }
