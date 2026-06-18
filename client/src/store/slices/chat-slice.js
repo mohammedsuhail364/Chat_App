@@ -9,6 +9,22 @@ export const createChatSlice = (set, get) => ({
   fileDownloadProgress: 0,
   channels: [],
   typingUsers: {}, //{[contactId]:true/false}
+  onlineUsers: new Set(),
+  addOnlineUsers: (userId) => {
+    set((state) => ({
+      onlineUsers: new Set([...state.onlineUsers]).add(userId),
+    }));
+  },
+  removeOnlineUsers: (userId) => {
+    set((state) => {
+      const updated = new Set([...state.onlineUsers]);
+      updated.delete(userId);
+      return { onlineUsers: updated };
+    });
+  },
+  setOnlineUsers: (userIds) => {
+    set({ onlineUsers: new Set(userIds) });
+  },
   setTyping: (contactId, isTyping) =>
     set((state) => ({
       typingUsers: { ...state.typingUsers, [contactId]: isTyping },

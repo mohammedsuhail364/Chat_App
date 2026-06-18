@@ -5,13 +5,17 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { RiCloseFill } from "react-icons/ri";
 
 const ChatHeader = () => {
-  const { closeChat, selectedChatData, selectedChatType, typingUsers } =
+  const { closeChat, selectedChatData, selectedChatType, typingUsers, onlineUsers, userInfo } =
     useAppStore();
   const isTyping =
     selectedChatType === "contact" &&
     !!typingUsers &&
     selectedChatData._id in typingUsers &&
     typingUsers[selectedChatData._id];
+  const isOnline =
+    selectedChatType === "contact" &&
+    onlineUsers.has(selectedChatData._id) &&
+    selectedChatData._id !== userInfo.id;
   return (
     <div
       className="h-[10vh] border-b-2 border-[#2f303b] flex items-center 
@@ -47,6 +51,9 @@ const ChatHeader = () => {
               <div className="bg-[#ffffff22] h-10 w-10 flex items-center justify-center rounded-full">
                 #
               </div>
+            )}
+            {isOnline && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1c1d25]" />
             )}
           </div>
 

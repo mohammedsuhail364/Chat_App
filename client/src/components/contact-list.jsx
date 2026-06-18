@@ -1,6 +1,5 @@
 import { getColor } from "@/lib/utils";
 import { useAppStore } from "@/store";
-import { HOST } from "@/utils/constants";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 
 const ContactList = ({ contacts, isChannel = false }) => {
@@ -9,6 +8,8 @@ const ContactList = ({ contacts, isChannel = false }) => {
     setSelectedChatType,
     setSelectedChatData,
     setSelectedChatMessages,
+    onlineUsers,
+    userInfo,
   } = useAppStore();
 
   /* -------------------------------------------------------
@@ -31,7 +32,10 @@ const ContactList = ({ contacts, isChannel = false }) => {
     <div className="mt-3">
       {contacts.map((contact) => {
         const isActive = selectedChatData?._id === contact._id;
-
+        const userOnline =
+          !isChannel &&
+          onlineUsers.has(contact._id) &&
+          contact._id !== userInfo.id;
         return (
           <div
             key={contact._id}
@@ -48,38 +52,50 @@ const ContactList = ({ contacts, isChannel = false }) => {
             `}
           >
             <div className="flex items-center gap-3 sm:gap-5">
-
               {/* -------------------------------------------------------
                  AVATAR (FOR DIRECT MESSAGES)
                  - If contact has image → show image
                  - Else → show colored initial
               -------------------------------------------------------- */}
               {!isChannel && (
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 rounded-full overflow-hidden">
-                  {contact.image ? (
-                    <AvatarImage
-                      src={contact.image}
-                      alt="profile"
-                      className="object-cover w-full h-full bg-black"
-                    />
-                  ) : (
-                    <div
-                      className={`
+                <div className="relative flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
+                  {/* ← explicit size here matches Avatar size exactly */}
+
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 rounded-full overflow-hidden">
+                    {contact.image ? (
+                      <AvatarImage
+                        src={contact.image}
+                        alt="profile"
+                        className="object-cover rounded-full w-full h-full bg-black"
+                      />
+                    ) : (
+                      <div
+                        className={`
                         h-full w-full flex items-center justify-center
                         text-sm sm:text-lg uppercase rounded-full border
-                        ${
-                          isActive
-                            ? "bg-white/20 border-white/70"
-                            : getColor(contact.color)
-                        }
+                        ${isActive ? "bg-white/20 border-white/70" : getColor(contact.color)}
                       `}
-                    >
-                      {contact.firstName
-                        ? contact.firstName[0]
-                        : contact.email[0]}
-                    </div>
+                      >
+                        {contact.firstName
+                          ? contact.firstName[0]
+                          : contact.email[0]}
+                      </div>
+                    )}
+                  </Avatar>
+
+                  {userOnline && (
+                    <span
+                      className={`
+                      absolute bottom-0 right-0 
+                      w-2.5 h-2.5 
+                      bg-green-500 rounded-full 
+                      border-2 
+                      ${isActive ? "border-[#8417ff]" : "border-[#1c1d25]"}
+                      translate-x-0.5 translate-y-0.5
+                    `}
+                    />
                   )}
-                </Avatar>
+                </div>
               )}
 
               {/* -------------------------------------------------------
@@ -105,8 +121,8 @@ const ContactList = ({ contacts, isChannel = false }) => {
                 {isChannel
                   ? contact.name
                   : contact.firstName
-                  ? `${contact.firstName} ${contact.lastName}`
-                  : contact.email}
+                    ? `${contact.firstName} ${contact.lastName}`
+                    : contact.email}
               </span>
             </div>
           </div>

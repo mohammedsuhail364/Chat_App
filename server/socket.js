@@ -31,6 +31,8 @@ const setupSocket = (server) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
       await pubClient.del(`socket:user:${userId}`); // replaces userSocketMap.delete
+      // when the user goes offline want to intimate all the users
+      io.emit("userOffline", { userId });
       console.log(`Cleared Redis entry for: ${userId}`);
     }
   };
@@ -140,6 +142,8 @@ const setupSocket = (server) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
       await pubClient.set(`socket:user:${userId}`, socket.id, { EX: 86400 }); // was: userSocketMap.set() — EX = auto delete after 24hrs
+      // emit the user online event to the userId
+      io.emit("userOnline", { userId });
       console.log(`User connected: ${userId} with socket ID: ${socket.id}`);
     } else {
       console.log("User ID not provided during connection.");
@@ -150,7 +154,14 @@ const setupSocket = (server) => {
       { recipient: userId, status: "sent" },
       { status: "delivered" },
     );
-
+    // get the online users list
+    socket.on("getOnlineUsers", async () => {
+      const keys = await pubClient.keys("socket:user:*");
+      const userIds=keys.map((key)=>key.replace("socket:user:",""));
+      console.log(userIds);
+      
+      socket.emit("userOnlineList",userIds);
+    });
     // CHANGED — pass socket into handlers so they can emit errors back
     socket.on("sendMessage", (message) => sendMessage(message, socket));
     socket.on("messageSeen", async ({ messageId, senderId }) => {
@@ -167,18 +178,18 @@ const setupSocket = (server) => {
     socket.on("send-channel-message", (message) =>
       sendChannelMessage(message, socket),
     );
-    socket.on("typing",async({senderId,recipientId})=>{
-      const recipientSocketId=await getUserSocketId(recipientId);
-      if(recipientSocketId){
-        io.to(recipientSocketId).emit("userTyping",{senderId});
+    socket.on("typing", async ({ senderId, recipientId }) => {
+      const recipientSocketId = await getUserSocketId(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("userTyping", { senderId });
       }
-    })
-    socket.on("stopTyping",async({senderId,recipientId})=>{
-      const recipientSocketId=await getUserSocketId(recipientId);
-      if(recipientSocketId){
-        io.to(recipientSocketId).emit("userStopTyping",{senderId});
+    });
+    socket.on("stopTyping", async ({ senderId, recipientId }) => {
+      const recipientSocketId = await getUserSocketId(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("userStopTyping", { senderId });
       }
-    })
+    });
     socket.on("disconnect", () => disconnect(socket)); // disconnect unchanged in behavior
   });
 };
